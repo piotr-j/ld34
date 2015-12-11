@@ -3,8 +3,8 @@ buildscript {
         appName = 'libgdx-artemis-quickstart'
         appVersion = '1.4'
 
-        gdxVersion = '1.7.0'
-        artemisVersion = '1.0.1'
+        gdxVersion = '1.7.1'
+        artemisVersion = '1.2.0'
         artemisContribVersion = '1.1.0'
         roboVMVersion = '1.8.0'
         box2DLightsVersion = '1.4'
