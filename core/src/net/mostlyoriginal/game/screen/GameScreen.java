@@ -6,12 +6,11 @@ import com.badlogic.gdx.graphics.Color;
 import net.mostlyoriginal.api.screen.core.WorldScreen;
 import net.mostlyoriginal.api.system.camera.CameraSystem;
 import net.mostlyoriginal.api.system.graphics.RenderBatchingSystem;
-import net.mostlyoriginal.api.system.mouse.MouseCursorSystem;
 import net.mostlyoriginal.api.system.render.AnimRenderSystem;
 import net.mostlyoriginal.api.system.render.ClearScreenSystem;
 import net.mostlyoriginal.game.system.BoundsRenderer;
-import net.mostlyoriginal.game.system.logic.CursorSystem;
-import net.mostlyoriginal.game.system.logic.SwarmSystem;
+import net.mostlyoriginal.game.system.logic.*;
+import net.mostlyoriginal.game.system.view.AtlasAssetSystem;
 import net.mostlyoriginal.game.system.view.GameScreenAssetSystem;
 import net.mostlyoriginal.game.system.view.GameScreenSetupSystem;
 import net.mostlyoriginal.game.system.view.OneAssetSystem;
@@ -37,12 +36,15 @@ public class GameScreen extends WorldScreen {
 				new CursorSystem(),
 				new ClearScreenSystem(Color.valueOf(BACKGROUND_COLOR_HEX)),
 				new GameScreenAssetSystem(),
-				new OneAssetSystem(),
+				new AtlasAssetSystem(),
 				new GameScreenSetupSystem(),
 				new SwarmSystem(),
+				new EdibleSpawnSystem(),
+				new SwarmEatSystem(),
+				new EdibleCleanupSystem(),
 				renderBatchingSystem = new RenderBatchingSystem(),
-				new AnimRenderSystem(renderBatchingSystem),
-				new BoundsRenderer()
+				new AnimRenderSystem(renderBatchingSystem)
+//				new BoundsRenderer()
 			).build());
 	}
 

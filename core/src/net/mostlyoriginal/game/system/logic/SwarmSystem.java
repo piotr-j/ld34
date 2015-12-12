@@ -13,7 +13,8 @@ import net.mostlyoriginal.api.component.basic.Scale;
 import net.mostlyoriginal.api.component.graphics.Anim;
 import net.mostlyoriginal.api.component.graphics.Renderable;
 import net.mostlyoriginal.api.component.graphics.Tint;
-import net.mostlyoriginal.game.component.CircleBounds;
+import net.mostlyoriginal.api.system.camera.CameraSystem;
+import net.mostlyoriginal.game.component.Bounds;
 import net.mostlyoriginal.game.component.Swarm;
 import net.mostlyoriginal.game.component.Swarmer;
 
@@ -23,21 +24,22 @@ import net.mostlyoriginal.game.component.Swarmer;
 public class SwarmSystem extends IteratingSystem {
 	private ComponentMapper<Pos> mPos;
 	private ComponentMapper<Swarm> mSwarm;
-	private ComponentMapper<CircleBounds> mCircleBounds;
+	private ComponentMapper<Bounds> mCircleBounds;
 	private ComponentMapper<Swarmer> mSwarmer;
 	private ComponentMapper<Tint> mTint;
 	@Wire CursorSystem cs;
+	@Wire CameraSystem cam;
 
 	public SwarmSystem () {
 		super(Aspect.all(Pos.class, Swarmer.class));
 	}
 
-	float swarmSize;
+	int swarmSize;
 	int swarmId;
 	@Override protected void initialize () {
 		EntityEdit swarm = world.createEntity().edit();
 		swarm.create(Swarm.class);
-		swarm.create(CircleBounds.class).setRadius(10);
+		swarm.create(Bounds.class).setRadius(10);
 		swarm.create(Pos.class);
 		swarmId = swarm.getEntityId();
 		// we can do about 10k in gwt
@@ -48,7 +50,6 @@ public class SwarmSystem extends IteratingSystem {
 	}
 
 	private void createSwarm (int count) {
-		swarmSize = count;
 		for (int i = 0; i < count; i++) {
 			createSwarmer();
 		}
@@ -62,38 +63,54 @@ public class SwarmSystem extends IteratingSystem {
 		swarmer.dst = (swarmer.angularSpeed - 15)/180 ;
 		swarmer.clamp = MathUtils.clamp(swarmer.dst+ MathUtils.random(-.1f, .1f), 0, 1);
 		e.create(Tint.class).set(1, 1-swarmer.clamp, 0, 1);
-		e.create(Pos.class);
-		e.create(Renderable.class).layer = 0;
+		e.create(Pos.class).set(cs.xy);
+		e.create(Renderable.class).layer = 1;
 		Anim anim = e.create(Anim.class);
 		anim.id = "one";
 		anim.age = MathUtils.random();
 		e.create(Scale.class).scale = MathUtils.random(.25f, 1.25f);
+		swarmSize++;
 	}
 
+	private int addPerMass = 10;
+	private float changeSpeed = 2f;
 	private float scale = .5f;
 	private float dstScale = .5f;
 	@Override protected void begin () {
 		if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)
 			|| Gdx.input.isKeyPressed(Input.Keys.A)
 			|| Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			scale = MathUtils.clamp(scale + .5f * world.delta, 0.1f, 1);
+			scale = MathUtils.clamp(scale + changeSpeed * world.delta, 0.1f, 1);
 		} else if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT)
 			|| Gdx.input.isButtonPressed(Input.Buttons.MIDDLE)
 			|| Gdx.input.isKeyPressed(Input.Keys.D)
 			|| Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-			scale = MathUtils.clamp(scale - .5f * world.delta, 0.1f, 1);
+			scale = MathUtils.clamp(scale - changeSpeed * world.delta, 0.1f, 1);
 		}
-		dstScale = scale * 100 * MathUtils.log(10, swarmSize);
-
+		dstScale = 100 * MathUtils.log(10, swarmSize);
+		// 1 - 2.5 at 100 - 100000
+		cam.camera.zoom = dstScale/200;
+		cam.camera.update();
+		dstScale *= scale;
 		// this is super piggy
 		Swarm swarm = mSwarm.get(swarmId);
 		swarm.radius = dstScale;
+		swarm.scale = scale;
+		swarm.count = swarmSize;
 		// slightly smaller, as its less dense near the edge
-		mCircleBounds.get(swarmId).setRadius(dstScale * 0.75f);
+		Bounds bounds = mCircleBounds.get(swarmId).setRadius(dstScale * 0.75f);
 		Pos pos = mPos.get(swarmId);
-		pos.xy.set(cs.xy);
-
-//		createSwarmer();
+		pos.xy.set(cs.xy).sub(bounds.radius, bounds.radius);
+		int toAdd = (int)swarm.mass;
+		if (toAdd >0) Gdx.app.log("", "Add " + toAdd);
+		for (int i = 0; i < toAdd * addPerMass; i++) {
+			createSwarmer();
+		}
+		swarm.mass -= toAdd;
+//		for (int i = 0; i < dstScale/20; i++) {
+//			if (swarmSize < 100000)
+//				createSwarmer();
+//		}
 	}
 
 	@Override protected void process (int entityId) {
