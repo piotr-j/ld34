@@ -6,10 +6,14 @@ import com.badlogic.gdx.graphics.Color;
 import net.mostlyoriginal.api.screen.core.WorldScreen;
 import net.mostlyoriginal.api.system.camera.CameraSystem;
 import net.mostlyoriginal.api.system.graphics.RenderBatchingSystem;
+import net.mostlyoriginal.api.system.mouse.MouseCursorSystem;
 import net.mostlyoriginal.api.system.render.AnimRenderSystem;
 import net.mostlyoriginal.api.system.render.ClearScreenSystem;
+import net.mostlyoriginal.game.system.logic.CursorSystem;
+import net.mostlyoriginal.game.system.logic.SwarmSystem;
 import net.mostlyoriginal.game.system.view.GameScreenAssetSystem;
 import net.mostlyoriginal.game.system.view.GameScreenSetupSystem;
+import net.mostlyoriginal.game.system.view.OneAssetSystem;
 import net.mostlyoriginal.plugin.OperationsPlugin;
 
 /**
@@ -25,16 +29,19 @@ public class GameScreen extends WorldScreen {
 	protected World createWorld() {
 		RenderBatchingSystem renderBatchingSystem;
 		return new World(new WorldConfigurationBuilder()
-				.dependsOn(OperationsPlugin.class)
-				.with(
-						// Replace with your own systems!
-						new CameraSystem(1),
-						new ClearScreenSystem(Color.valueOf(BACKGROUND_COLOR_HEX)),
-						new GameScreenAssetSystem(),
-						new GameScreenSetupSystem(),
-						renderBatchingSystem = new RenderBatchingSystem(),
-						new AnimRenderSystem(renderBatchingSystem)
-				).build());
+			.dependsOn(OperationsPlugin.class)
+			.with(
+				// Replace with your own systems!
+				new CameraSystem(1),
+				new CursorSystem(),
+				new ClearScreenSystem(Color.valueOf(BACKGROUND_COLOR_HEX)),
+				new GameScreenAssetSystem(),
+				new OneAssetSystem(),
+				new GameScreenSetupSystem(),
+				new SwarmSystem(),
+				renderBatchingSystem = new RenderBatchingSystem(),
+				new AnimRenderSystem(renderBatchingSystem)
+			).build());
 	}
 
 }
