@@ -34,9 +34,11 @@ public class EdibleCleanupSystem extends IteratingSystem {
 	}
 
 	@Override protected void process (int entityId) {
+		Pos pos = mPos.get(entityId);
+		Bounds bounds = mBounds.get(entityId);
+		bounds.b.setPosition(pos.xy.x + bounds.radius, pos.xy.y + bounds.radius);
 		Edible edible = mEdible.get(entityId);
 		if (edible.health <= 0) {
-			Pos pos = mPos.get(entityId);
 			Scale scale = mScale.get(entityId);
 			EntityEdit dead = world.createEntity().edit();
 			dead.create(Pos.class).set(pos);

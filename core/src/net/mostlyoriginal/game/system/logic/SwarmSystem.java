@@ -3,11 +3,17 @@ package net.mostlyoriginal.game.system.logic;
 import com.artemis.Aspect;
 import com.artemis.ComponentMapper;
 import com.artemis.EntityEdit;
+import com.artemis.EntitySubscription;
 import com.artemis.annotations.Wire;
 import com.artemis.systems.IteratingSystem;
+import com.artemis.utils.IntBag;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import net.mostlyoriginal.api.component.basic.Pos;
 import net.mostlyoriginal.api.component.basic.Scale;
 import net.mostlyoriginal.api.component.graphics.Anim;
@@ -15,6 +21,7 @@ import net.mostlyoriginal.api.component.graphics.Renderable;
 import net.mostlyoriginal.api.component.graphics.Tint;
 import net.mostlyoriginal.api.system.camera.CameraSystem;
 import net.mostlyoriginal.game.component.Bounds;
+import net.mostlyoriginal.game.component.Edible;
 import net.mostlyoriginal.game.component.Swarm;
 import net.mostlyoriginal.game.component.Swarmer;
 
@@ -36,6 +43,7 @@ public class SwarmSystem extends IteratingSystem {
 
 	int swarmSize;
 	int swarmId;
+	EntitySubscription edibles;
 	@Override protected void initialize () {
 		EntityEdit swarm = world.createEntity().edit();
 		swarm.create(Swarm.class);
@@ -47,6 +55,8 @@ public class SwarmSystem extends IteratingSystem {
 		// hmm consume speed/dmg taken based on swarm size && scale?
 		// spread out swarm takes less dmg, but eats slowly,
 		// compact swarms eats fast, but is vulnerable to dmg
+
+		edibles = world.getAspectSubscriptionManager().get(Aspect.all(Pos.class, Edible.class, Bounds.class));
 	}
 
 	private void createSwarm (int count) {
@@ -72,10 +82,12 @@ public class SwarmSystem extends IteratingSystem {
 		swarmSize++;
 	}
 
-	private int addPerMass = 10;
+	private int addPerMass = 100;
 	private float changeSpeed = 2f;
 	private float scale = .5f;
 	private float dstScale = .5f;
+	private Vector2 sPos = new Vector2();
+	private float sRadius2;
 	@Override protected void begin () {
 		if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)
 			|| Gdx.input.isKeyPressed(Input.Keys.A)
@@ -89,28 +101,45 @@ public class SwarmSystem extends IteratingSystem {
 		}
 		dstScale = 100 * MathUtils.log(10, swarmSize);
 		// 1 - 2.5 at 100 - 100000
-		cam.camera.zoom = dstScale/200;
-		cam.camera.update();
+		float newZoom = dstScale/200;
+		if (newZoom != cam.zoom) {
+//			updateCamZoom(newZoom);
+		}
 		dstScale *= scale;
 		// this is super piggy
 		Swarm swarm = mSwarm.get(swarmId);
 		swarm.radius = dstScale;
 		swarm.scale = scale;
 		swarm.count = swarmSize;
+		sRadius2 = dstScale * dstScale;
 		// slightly smaller, as its less dense near the edge
 		Bounds bounds = mCircleBounds.get(swarmId).setRadius(dstScale * 0.75f);
 		Pos pos = mPos.get(swarmId);
 		pos.xy.set(cs.xy).sub(bounds.radius, bounds.radius);
+		sPos.set(pos.xy.x + dstScale, pos.xy.y + dstScale);
 		int toAdd = (int)swarm.mass;
 		if (toAdd >0) Gdx.app.log("", "Add " + toAdd);
 		for (int i = 0; i < toAdd * addPerMass; i++) {
 			createSwarmer();
 		}
 		swarm.mass -= toAdd;
-//		for (int i = 0; i < dstScale/20; i++) {
-//			if (swarmSize < 100000)
-//				createSwarmer();
-//		}
+		IntBag entities = edibles.getEntities();
+		data = entities.getData();
+		size = entities.size();
+	}
+
+	int[] data;
+	int size;
+	Vector3 zTmp1 = new Vector3();
+	Vector3 zTmp2 = new Vector3();
+	private void updateCamZoom (float newZoom) {
+		OrthographicCamera c = cam.camera;
+		c.unproject(zTmp1.set(cs.xy.x, cs.xy.y, 0));
+		c.zoom = newZoom;
+		c.update();
+		c.unproject(zTmp2.set(cs.xy.x, cs.xy.y, 0));
+		c.translate(zTmp1.sub(zTmp2));
+		c.update();
 	}
 
 	@Override protected void process (int entityId) {
@@ -121,6 +150,19 @@ public class SwarmSystem extends IteratingSystem {
 		swarmer.angle -= world.delta * swarmer.angularSpeed /(scale*10);
 		if (swarmer.angle >= 360) swarmer.angle -= 360;
 		if (swarmer.angle < 0) swarmer.angle += 360;
+		if (pos.xy.dst2(sPos) <= sRadius2) {
+			for (int i = 0; i < size; i++) {
+				int eid = data[i];
+				Bounds eb = mCircleBounds.get(eid);
+				if (eb.b.contains(pos.xy)) {
+					pos.set(eb.b.x, eb.b.y);
+					pos.xy.add(
+						MathUtils.randomTriangular(-eb.radius, eb.radius, 0),
+						MathUtils.randomTriangular(-eb.radius, eb.radius, 0));
+					return;
+				}
+			}
+		}
 		pos.xy.set(1, 0).setAngle(swarmer.angle).scl(swarmer.dst * dstScale).add(cs.xy);
 
 		Tint tint = mTint.get(entityId);

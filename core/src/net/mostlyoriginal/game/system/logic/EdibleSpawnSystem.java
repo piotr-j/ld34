@@ -44,7 +44,7 @@ public class EdibleSpawnSystem extends BaseSystem {
 		float scale = MathUtils.random(1f, 2f);
 		e.create(Scale.class).scale = scale;
 		Edible edible = e.create(Edible.class);
-		edible.maxHealth = edible.health = 10 * scale;
+		edible.maxHealth = edible.health = 50 * scale;
 		edible.mass = 1 * scale;
 		e.create(Tint.class).set(Color.WHITE);
 		Bounds bounds = e.create(Bounds.class);
