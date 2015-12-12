@@ -10,6 +10,7 @@ public class Swarmer extends Component {
 	public float age;
 	public float angularSpeed;
 	public float dst;
+	public float clamp;
 
 	public Swarmer setAngle (float angle) {
 		this.angle = angle;

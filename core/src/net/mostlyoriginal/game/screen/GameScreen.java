@@ -9,6 +9,7 @@ import net.mostlyoriginal.api.system.graphics.RenderBatchingSystem;
 import net.mostlyoriginal.api.system.mouse.MouseCursorSystem;
 import net.mostlyoriginal.api.system.render.AnimRenderSystem;
 import net.mostlyoriginal.api.system.render.ClearScreenSystem;
+import net.mostlyoriginal.game.system.BoundsRenderer;
 import net.mostlyoriginal.game.system.logic.CursorSystem;
 import net.mostlyoriginal.game.system.logic.SwarmSystem;
 import net.mostlyoriginal.game.system.view.GameScreenAssetSystem;
@@ -40,7 +41,8 @@ public class GameScreen extends WorldScreen {
 				new GameScreenSetupSystem(),
 				new SwarmSystem(),
 				renderBatchingSystem = new RenderBatchingSystem(),
-				new AnimRenderSystem(renderBatchingSystem)
+				new AnimRenderSystem(renderBatchingSystem),
+				new BoundsRenderer()
 			).build());
 	}
 
