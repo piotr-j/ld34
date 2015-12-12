@@ -43,7 +43,8 @@ public class GameScreen extends WorldScreen {
 				new SwarmEatSystem(),
 				new EdibleCleanupSystem(),
 				renderBatchingSystem = new RenderBatchingSystem(),
-				new AnimRenderSystem(renderBatchingSystem)
+				new AnimRenderSystem(renderBatchingSystem),
+				new ExpireSystem()
 //				new BoundsRenderer()
 			).build());
 	}

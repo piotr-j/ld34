@@ -20,6 +20,7 @@ public class AtlasAssetSystem extends AbstractAssetSystem {
 		super("one.png");
 		atlas = createAtlas(
 			"apple.png",
+			"apple-dead.png",
 			"one.png"
 		);
 	}
@@ -32,6 +33,8 @@ public class AtlasAssetSystem extends AbstractAssetSystem {
 		one.setFrameDuration(1/5f);
 		final Animation apple = add("apple", 0, 0, 16, 16, 1);
 		apple.setFrameDuration(1);
+		final Animation apple2 = add("apple-dead", 0, 0, 6, 16, 1);
+		apple2.setFrameDuration(1);
 	}
 
 	public Animation add(final String identifier, int x1, int y1, int w, int h, int repeatX, int repeatY, Texture texture, float frameDuration) {
