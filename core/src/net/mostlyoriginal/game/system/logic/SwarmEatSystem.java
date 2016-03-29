@@ -61,7 +61,7 @@ public class SwarmEatSystem extends IteratingSystem {
 		Edible edible = mEdible.get(eid);
 		// TODO figure it out
 		float dmg = (1.1f-swarm.scale) * swarm.count * world.delta * 0.25f;
-		Gdx.app.log("", "dmg " + dmg);
+//		Gdx.app.log("", "dmg " + dmg);
 		edible.health -= dmg;
 		Tint tint = mTint.get(eid);
 		float a = edible.health/edible.maxHealth;

@@ -9,11 +9,13 @@ import com.artemis.systems.IteratingSystem;
 import com.artemis.utils.IntBag;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.TimeUtils;
 import net.mostlyoriginal.api.component.basic.Pos;
 import net.mostlyoriginal.api.component.basic.Scale;
 import net.mostlyoriginal.api.component.graphics.Anim;
@@ -29,11 +31,14 @@ import net.mostlyoriginal.game.component.Swarmer;
  * Created by EvilEntity on 12/12/2015.
  */
 public class SwarmSystem extends IteratingSystem {
+	private final static String TAG = SwarmSystem.class.getSimpleName();
+
 	private ComponentMapper<Pos> mPos;
 	private ComponentMapper<Swarm> mSwarm;
 	private ComponentMapper<Bounds> mCircleBounds;
 	private ComponentMapper<Swarmer> mSwarmer;
 	private ComponentMapper<Tint> mTint;
+	private FPSLogger logger;
 	@Wire CursorSystem cs;
 	@Wire CameraSystem cam;
 
@@ -44,6 +49,7 @@ public class SwarmSystem extends IteratingSystem {
 	int swarmSize;
 	int swarmId;
 	EntitySubscription edibles;
+	long startTime;
 	@Override protected void initialize () {
 		EntityEdit swarm = world.createEntity().edit();
 		swarm.create(Swarm.class);
@@ -57,6 +63,7 @@ public class SwarmSystem extends IteratingSystem {
 		// compact swarms eats fast, but is vulnerable to dmg
 
 		edibles = world.getAspectSubscriptionManager().get(Aspect.all(Pos.class, Edible.class, Bounds.class));
+		startTime = TimeUtils.nanoTime();
 	}
 
 	private void createSwarm (int count) {
@@ -118,7 +125,7 @@ public class SwarmSystem extends IteratingSystem {
 		pos.xy.set(cs.xy).sub(bounds.radius, bounds.radius);
 		sPos.set(pos.xy.x + dstScale, pos.xy.y + dstScale);
 		int toAdd = (int)swarm.mass;
-		if (toAdd >0) Gdx.app.log("", "Add " + toAdd);
+//		if (toAdd >0) Gdx.app.log("", "Add " + toAdd);
 		for (int i = 0; i < toAdd * addPerMass; i++) {
 			createSwarmer();
 		}
@@ -168,5 +175,23 @@ public class SwarmSystem extends IteratingSystem {
 		Tint tint = mTint.get(entityId);
 		tint.set(1, 1-(swarmer.clamp * scale), (swarmer.clamp * scale)/5, 1);
 
+	}
+
+	@Override protected void end () {
+		if (TimeUtils.nanoTime() - startTime > 1000000000) /* 1,000,000,000ns == one second */{
+			int size = getEntityIds().size();
+			Gdx.app.log(TAG, "fps: " + Gdx.graphics.getFramesPerSecond() + ", entities: " + size);
+			startTime = TimeUtils.nanoTime();
+			int max = 250000;
+			if (size < max) {
+				for (int i = 0; i < Math.max(size / 3, 100); i++) {
+					if (size + i < max) {
+						createSwarmer();
+					} else {
+						break;
+					}
+				}
+			}
+		}
 	}
 }

@@ -40,8 +40,8 @@ public class GameScreen extends WorldScreen {
 				new GameScreenSetupSystem(),
 				new SwarmSystem(),
 				new EdibleSpawnSystem(),
-				new SwarmEatSystem(),
-				new EdibleCleanupSystem(),
+//				new SwarmEatSystem(),
+//				new EdibleCleanupSystem(),
 				renderBatchingSystem = new RenderBatchingSystem(),
 				new AnimRenderSystem(renderBatchingSystem),
 				new ExpireSystem()
