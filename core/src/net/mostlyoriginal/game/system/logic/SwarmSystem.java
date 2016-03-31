@@ -184,7 +184,7 @@ public class SwarmSystem extends IteratingSystem {
 			startTime = TimeUtils.nanoTime();
 			int max = 250000;
 			if (size < max) {
-				for (int i = 0; i < Math.max(size / 3, 100); i++) {
+				for (int i = 0; i < Math.max(size / 4, 150); i++) {
 					if (size + i < max) {
 						createSwarmer();
 					} else {
